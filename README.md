@@ -14,52 +14,52 @@ This is a personal project with a business analytics twist analyzing my personal
 
 ## Methods
 
-1. **Metric Selection**
-    - The following core metrics and dimensions were engineered:
-        - **Total Listens (TL)**: Total play count for each unique track across the 6-year span
-        - **Catalog Play Percentile (C%ile)**: Relative percentile rank of each song across all 11,614 tracks in the catalog
-        - **Performance Tier (PT)**: Four-tiered segmentation based on catalog play percentile:
-            - *Personal Hit (Top 10%)*: $\ge 90\text{th}$ percentile ($\ge 25$ listens).
-            - *High Performer (Top 25%)*: $75\text{th} - 90\text{th}$ percentile.
-            - *Mid-Tier*: $40\text{th} - 75\text{th}$ percentile.
-            - *Long-Tail*: $< 40\text{th}$ percentile.
-        - **Weeks Since Release (WSR)**: Total number of weeks since the first time the song was played in the catalog
-        - **Weeks Since First Listen (WSFL)**: Total number of weeks since the first time the song was ever played
-        - **Plays Per Week Since Release (PPRSR)**: Replay velocity of song from when it was first released ($TL / \max(WSR, 1.0)$)
-        - **Plays Per Week Since First Listen (PPWSFL)**: Replay velocity of song from when it was first discovered/listened to ($TL / \max(WSFL, 1.0)$)
-        - **Sentiment Score (SS) & Mood**: Hugging Face transformer model classification confidence and top emotion category (*anger, disgust, fear, joy, neutral, sadness, surprise*)
-        - **Primary Genre**: Primary genre of the song as determined by zero-shot classification and 4-genre tag parsing
+### 1. Metric Selection
+- The following core metrics and dimensions were engineered:
+    - **Total Listens (TL)**: Total play count for each unique track across the 6-year span
+    - **Catalog Play Percentile (C%ile)**: Relative percentile rank of each song across all 11,614 tracks in the catalog
+    - **Performance Tier (PT)**: Four-tiered segmentation based on catalog play percentile:
+        - *Personal Hit (Top 10%)*: $\ge 90\text{th}$ percentile ($\ge 25$ listens).
+        - *High Performer (Top 25%)*: $75\text{th} - 90\text{th}$ percentile.
+        - *Mid-Tier*: $40\text{th} - 75\text{th}$ percentile.
+        - *Long-Tail*: $< 40\text{th}$ percentile.
+    - **Weeks Since Release (WSR)**: Total number of weeks since the first time the song was played in the catalog
+    - **Weeks Since First Listen (WSFL)**: Total number of weeks since the first time the song was ever played
+    - **Plays Per Week Since Release (PPRSR)**: Replay velocity of song from when it was first released (`TL / max(WSR, 1.0)`)
+    - **Plays Per Week Since First Listen (PPWSFL)**: Replay velocity of song from when it was first discovered/listened to (`TL / max(WSFL, 1.0)`)
+    - **Sentiment Score (SS) & Mood**: Hugging Face transformer model classification confidence and top emotion category (*anger, disgust, fear, joy, neutral, sadness, surprise*)
+    - **Primary Genre**: Primary genre of the song as determined by zero-shot classification and 4-genre tag parsing
 
-2. **Modeling Method**
-    - **Emotion & Sentiment Inference**: Utilized the `j-hartmann/emotion-english-distilroberta-base` fine-tuned RoBERTa transformer model to classify song lyrics into 7 distinct emotional categories (*anger, disgust, fear, joy, neutral, sadness, surprise*) along with high-level polarity (*positive, negative, neutral*).
-    - **Zero-Shot Genre Resolution**: Applied zero-shot classification and curated tag parsing to resolve primary musical genres while filtering out non-genre tags (e.g., countries, languages, "acoustic", "concept album").
-    - **Personal Hit Classification Rule**
-        - The following percentile equation was used to rank tracks across the listening catalog:
-        $$\text{catalog\_play\_percentile} = \frac{\text{Rank}(\text{Total Listens}) - 1}{N - 1}$$
-        - Any track ranking at or above the 90th percentile ($\ge 25$ total listens) was classified as a **Personal Hit** (`is_personal_hit = 1`). This threshold isolates the top 10% of catalog tracks that represent core favorites and drive disproportionate listening share.
+### 2. Modeling Method
+- **Emotion & Sentiment Inference**: Utilized the `j-hartmann/emotion-english-distilroberta-base` fine-tuned RoBERTa transformer model to classify song lyrics into 7 distinct emotional categories (*anger, disgust, fear, joy, neutral, sadness, surprise*) along with high-level polarity (*positive, negative, neutral*).
+- **Zero-Shot Genre Resolution**: Applied zero-shot classification and curated tag parsing to resolve primary musical genres while filtering out non-genre tags (e.g., countries, languages, "acoustic", "concept album").
+- **Personal Hit Classification Rule**:
+    - The following percentile equation was used to rank tracks across the listening catalog:
+    $$\text{Catalog Play Percentile} = \frac{\text{Rank}(\text{Total Listens}) - 1}{N - 1}$$
+    - Any track ranking at or above the 90th percentile ($\ge 25$ total listens) was classified as a **Personal Hit** (`is_personal_hit = 1`). This threshold isolates the top 10% of catalog tracks that represent core favorites and drive disproportionate listening share.
 
-3. **ETL Pipeline Overview**
-    - The ETL pipeline ingests raw Last.fm scrobble dumps, resolves track and artist entities against MusicBrainz, and scrapes song lyrics and tag data using the Genius API.
-    - Python pipelines clean text formatting, strip featured artist suffixes, handle missing release dates, and generate deterministic surrogate MD5 keys:
-      ```python
-      track_id = md5(f"{normalized_artist}|{normalized_track}|{normalized_album}")
-      ```
-    - Transformer inference runs in batched PyTorch pipelines to score emotion probabilities on cleaned lyrics.
-    - Cleaned and enriched datasets are partitioned into normalized staging tables (`stg_tracks`, `stg_listens`) and modeled downstream into dimensional business marts using SQL and dbt on Databricks.
+### 3. ETL Pipeline Overview
+- The ETL pipeline ingests raw Last.fm scrobble dumps, resolves track and artist entities against MusicBrainz, and scrapes song lyrics and tag data using the Genius API.
+- Python pipelines clean text formatting, strip featured artist suffixes, handle missing release dates, and generate deterministic surrogate MD5 keys:
+  ```python
+  track_id = md5(f"{normalized_artist}|{normalized_track}|{normalized_album}")
+  ```
+- Transformer inference runs in batched PyTorch pipelines to score emotion probabilities on cleaned lyrics.
+- Cleaned and enriched datasets are partitioned into normalized staging tables (`stg_tracks`, `stg_listens`) and modeled downstream into dimensional business marts using SQL and dbt on Databricks.
 
-![End-to-end Pipeline](images/pipeline.png)
+![End-to-end Pipeline](images/Pipeline.png)
 
-4. **Warehouse Schema**
-    - The data warehouse follows a star schema centered around `stg_listens` (fact table of 100,946 scrobble events) and `stg_tracks` (dimension table of 11,614 enriched tracks).
-    - Dimension and fact models feed into analytics marts:
-        - **`mart_personal_hits`**: Track-level table containing total listens, catalog percentiles, performance tiers, weekly replay velocities (PPRSR, PPWSFL), release/first listen dates, and mood classifications.
-        - **`mart_genre_hit_rates`**: Genre-level aggregation calculating total tracks, personal hit counts, personal hit rates, total plays, and hit play shares.
+### 4. Warehouse Schema
+- The data warehouse follows a star schema centered around `stg_listens` (fact table of 100,946 scrobble events) and `stg_tracks` (dimension table of 11,614 enriched tracks).
+- Dimension and fact models feed into analytics marts:
+    - **`mart_personal_hits`**: Track-level table containing total listens, catalog percentiles, performance tiers, weekly replay velocities (PPRSR, PPWSFL), release/first listen dates, and mood classifications.
+    - **`mart_genre_hit_rates`**: Genre-level aggregation calculating total tracks, personal hit counts, personal hit rates, total plays, and hit play shares.
 
 ![Dbt Lineage](images/Lineage.png)
 
-5. **Minimum Sample Thresholds**
-    - To avoid small-sample distortion, the Artist Metrics table only lists artists individually if they have ≥15 distinct tracks played; artists below this threshold are grouped under “Other” (with their individual tracks still viewable, ranked by play count) to prevent one or two high-play tracks from an under-sampled artist from appearing statistically equivalent to an artist with a diverse and deeper listening catalog. This creates a more meaningful representation of an artist's contribution to my overall music listening.
-    - The genre-level charts separately show the top 15 genres with the most total listens; this is a display limit rather than a sample-size issue.
+### 5. Minimum Sample Thresholds
+- To avoid small-sample distortion, the Artist Metrics table only lists artists individually if they have ≥15 distinct tracks played; artists below this threshold are grouped under “Other” (with their individual tracks still viewable, ranked by play count) to prevent one or two high-play tracks from an under-sampled artist from appearing statistically equivalent to an artist with a diverse and deeper listening catalog. This creates a more meaningful representation of an artist's contribution to my overall music listening.
+- The genre-level charts separately show the top 15 genres with the most total listens; this is a display limit rather than a sample-size issue.
 
 ## Results & Dashboard
 - The Tableau dashboard provides an executive and interactive look at my personal music consumption, content tiers, genre preferences, and emotions.
