@@ -40,10 +40,7 @@ This is a personal project with a business analytics twist analyzing my personal
 
 ### 3. ETL Pipeline Overview
 - The ETL pipeline ingests raw Last.fm scrobble dumps, resolves track and artist entities against MusicBrainz, and scrapes song lyrics and tag data using the Genius API.
-- Python pipelines clean text formatting, strip featured artist suffixes, handle missing release dates, and generate deterministic surrogate MD5 keys:
-  ```python
-  track_id = md5(f"{normalized_artist}|{normalized_track}|{normalized_album}")
-  ```
+- Python pipelines clean text formatting, strip featured artist suffixes, handle missing release dates, and generate deterministic surrogate MD5 keys from normalized artist, track, and album names
 - Transformer inference runs in batched PyTorch pipelines to score emotion probabilities on cleaned lyrics.
 - Cleaned and enriched datasets are partitioned into normalized staging tables (`stg_tracks`, `stg_listens`) and modeled downstream into dimensional business marts using SQL and dbt on Databricks.
 
@@ -62,7 +59,7 @@ This is a personal project with a business analytics twist analyzing my personal
 - The genre-level charts separately show the top 15 genres with the most total listens; this is a display limit rather than a sample-size issue.
 
 ## Results & Dashboard
-- The Tableau dashboard provides an executive and interactive look at my personal music consumption, content tiers, genre preferences, and emotions.
+- The Tableau dashboard provides an executive and interactive look at my personal music consumption, content tiers, genre preferences, and emotions:
 
 ![Personal Music Analytics Dashboard](images/Dashboard.png)
 
