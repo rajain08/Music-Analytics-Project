@@ -1,0 +1,75 @@
+version: 2
+
+models:
+
+
+
+  - name: mart_hit_identification
+    description: "KPI 5: Identifies top 10% hit tracks and correlates performance with genre, mood, discovery latency, and listen velocity"
+    columns:
+      - name: track_id
+        tests:
+          - unique
+          - not_null
+      - name: catalog_play_percentile
+        tests:
+          - not_null
+      - name: is_hit
+        tests:
+          - not_null
+
+  - name: mart_track_engagement
+    description: "Track-level discovery latency, total listens, and active days"
+    columns:
+      - name: track_id
+        tests:
+          - unique
+          - not_null
+
+
+  - name: mart_personal_hits
+    description: "Track-level Personal Hit classification, weekly play rates since release/first listen, and leaderboard rankings"
+    columns:
+      - name: track_id
+        tests:
+          - unique
+          - not_null
+      - name: total_listens
+        tests:
+          - not_null
+      - name: sentiment
+        tests:
+          - not_null
+      - name: weeks_since_first_listen
+        tests:
+          - not_null
+      - name: plays_per_week_since_first_listen
+        tests:
+          - not_null
+      - name: weeks_since_release
+        tests:
+          - not_null
+      - name: plays_per_week_since_release
+        tests:
+          - not_null
+      - name: is_personal_hit
+        tests:
+          - not_null
+
+
+  - name: mart_genre_hit_rates
+    description: "Genre-level aggregation of personal hit counts, hit rates, hit play shares, and average weekly play rates"
+    columns:
+      - name: primary_genre
+        tests:
+          - unique
+          - not_null
+      - name: personal_hit_rate
+        tests:
+          - not_null
+      - name: hit_play_share
+        tests:
+          - not_null
+
+
+

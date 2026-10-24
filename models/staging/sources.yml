@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: "{{ env_var('DATABRICKS_SCHEMA', 'default') }}"
+    description: "Raw ingested tables from Databricks storage"
+    tables:
+      - name: raw_listens
+        description: "Raw play event records from scrobbles"
+        columns:
+          - name: track_id
+            description: "Surrogate MD5 hash representing the unique track"
+          - name: played_at
+            description: "Timestamp when the track was played"
+
+      - name: raw_tracks
+        description: "Raw unique track catalog enriched with Genius metadata and sentiment"
+        columns:
+          - name: track_id
+            description: "Surrogate MD5 hash representing the unique track"
+          - name: artist
+          - name: track
+          - name: album
+          - name: genre
+          - name: mood_category
+          - name: sentiment_score
+          - name: sentiment_polarity
+          - name: release_date

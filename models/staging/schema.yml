@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: stg_tracks
+    description: "Staging model for unique tracks, enriched with zero-shot primary genre and RoBERTa emotion sentiment"
+    columns:
+      - name: track_id
+        description: "Surrogate primary key: md5(normalized_artist|normalized_track|normalized_album)"
+        tests:
+          - unique
+          - not_null
+
+      - name: artist
+        tests:
+          - not_null
+
+      - name: track
+        tests:
+          - not_null
+
+      - name: primary_genre
+        description: "Primary genre resolved via zero-shot classification"
+
+      - name: mood_category
+        description: "Top emotion: anger, disgust, fear, joy, neutral, sadness, surprise"
+
+      - name: sentiment_score
+        description: "Confidence score for the predicted mood_category"
+
+      - name: release_date
+        description: "Official song/album release date"
+
+  - name: stg_listens
+    description: "Staging model for historical scrobble play events"
+    columns:
+      - name: track_id
+        description: "Foreign key joining to stg_tracks.track_id"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tracks')
+              field: track_id
+
+      - name: played_at
+        description: "UTC timestamp when the track was played"
+        tests:
+          - not_null

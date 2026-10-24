@@ -1,0 +1,35 @@
+#macOS
+.DS_Store
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+#Python & Virtual Environments
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+
+#dbt
+target/
+dbt_packages/
+dbt_modules/
+logs/
+*.log
+.user.yml
+
+#Local Cache & Secrets
+.musicbrainz_cache.json
+*.env
+
+#Tableau temporary extraction folders
+dashboard/
+
+#Raw/heavy data files (exclude raw dumps, keep final analytical marts)
+data/scrobbles*.csv
+data/unique_tracks_with_lyrics.csv
+data/cleaned_tracks_with_sentiment.csv
+scrobbles*.csv
