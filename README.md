@@ -94,5 +94,5 @@ The findings such as the Pareto principle for engagement and the role of emotion
 - dbt (Data Build Tool)
 - Databricks/SQL
 - MusicBrainz API & Genius API
-- Last.fm API
+- Last.fm (Scrobble Export)
 - Tableau Public
